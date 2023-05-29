@@ -1,0 +1,177 @@
+{% macro htmlSelect(tabID, tablename, selectedid, mstyle)%}
+     <div id={{tabID}} class="tab-pane active" style={{mstyle}}>
+        <h3>Select {{tablename}}</h3>
+         <div class="row">
+             <div class="col-xl-10">
+                <select class="form-control" id="{{selectedid}}" name="{{selectedid}}"> </select>
+             </div>
+             <div class="col-xl-2">
+                 <button type="button" class="btn btn-primary" onclick="loadAllData()"  style="width:130px;">load Data</button>
+             </div>
+         </div>
+    </div>
+{% endmacro %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CRUD Operations</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script>
+        function ThemSuaXoaData(ThemSuaXoa){
+            // txt_input_id = NewNameInput => '#NewNameInput'
+            // sTable  = 'Custom'
+            event.preventDefault();
+
+            var myID = "";
+            var new_name = $('#NewNameInput').val();
+            if (ThemSuaXoa=="add")    new_name = $('#NewNameInput').val();
+            if (ThemSuaXoa=="update") new_name = $('#UpdatedNameInput').val();
+            if (ThemSuaXoa=="delete") new_name = "";
+            
+
+            var customSelect_id  = $('#CustomSelect').val();
+            var ProjectSelect_id = $('#ProjectSelect').val();
+            var ModelsSelect_id  = $('#ModelsSelect').val();
+
+            var parent_id ="";
+            myID = $('#CustomSelect').val();
+            
+            if (tblName==="Project"){
+                myID=$('#ProjectSelect').val();
+                parent_id=customSelect_id;
+            }
+            if (tblName==="Models") {
+                myID=$('#ModelsSelect').val();
+                parent_id=ProjectSelect_id;
+            }
+            if (tblName==="Label")  {
+                myID=$('#LabelSelect').val();
+                parent_id=ModelsSelect_id;
+            }
+
+            $.ajax({
+                url: '/data',
+                type: 'POST',
+                data: { table : tblName,
+                        action : ThemSuaXoa,
+                        new_name: new_name,
+                        parent_id: parent_id,
+                        myID: myID,
+                        },
+                success: function(response) {
+                    alert(response.message);
+                    if (ThemSuaXoa=="add") $('#NewNameInput').val('');
+                    if (ThemSuaXoa=="update") $('#UpdatedNameInput').val('');
+                    loadAllData();
+                },
+                error: function(xhr, status, error) {
+                    alert('Error: ' + error);
+                }
+            });
+        }
+         
+        var LastTab="customTab";
+        $(document).ready(function() {
+            // Xử lý chuyển đổi giữa các tab
+            $('.tab').click(function() {
+                $("#"+LastTab).hide();
+                $('.tab').removeClass('active');
+
+                $(this).addClass('active');
+                var tab = $(this).attr('data-tab');
+                LastTab = tab;
+                $("#"+LastTab).show();
+                // console.log(LastTab);
+            });
+            loadAllData();
+        });
+ 
+        function loadAllData() {
+            $.ajax({
+                url: '/data',
+                type: 'POST',
+                data: { table : tblName,
+                        action : 'loadall'},
+                success: function(response) {
+                    var All_List = JSON.parse(response);
+                    console.log('#'+tblName+'Select');
+                    var lSelect = $('#'+tblName+'Select');
+                    lSelect.empty();
+
+                    for (var i = 0; i < All_List.length; i++) {
+                        var mdat = All_List[i];
+                        lSelect.append($('<option>').text(mdat[1]).attr('value', mdat[0]));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Error: ' + error);
+                }
+            });
+        }
+ 
+        var tblName='Custom';
+        function fnSetActiveTab(tbl){
+            tblName=tbl;
+            console.log(tblName);
+            //loadAllData();
+        }
+    </script>
+</head>
+
+<body>
+    <div class="container mt-5">
+
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a class="nav-link tab active" data-tab="customTab" href="#" onclick="fnSetActiveTab('Custom')">Custom</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link tab" data-tab="projectTab" href="#" onclick="fnSetActiveTab('Project')">Project</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link tab" data-tab="modelsTab" href="#" onclick="fnSetActiveTab('Models')">Models</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link tab" data-tab="labelTab" href="#" onclick="fnSetActiveTab('Label')">Label</a>
+            </li>
+        </ul>
+        <div class="tab-content mt-3">
+            {{ htmlSelect("customTab","Custom", "CustomSelect", "display:block;") }}
+            {{ htmlSelect("projectTab","Project", "ProjectSelect", "display:none;") }}
+            {{ htmlSelect("modelsTab","Models", "ModelsSelect", "display:none;") }}
+            {{ htmlSelect("labelTab","Label", "LabelSelect", "display:none;") }}
+        </div>
+
+        <hr>
+        <H3> Working with selected data: </H3>
+
+        <form id="addCustomForm" class="mt-4">
+            <div class="input-group">
+                <div class="input-group-prepend"><span class="input-group-text" style="width:130px;">Thêm dữ liệu:</span> </div>
+                <input type="text" class="form-control" id="NewNameInput" required>
+                <div class="input-group-append"><span class="input-group-text">
+                    <button type="button" class="btn btn-primary" onclick="ThemSuaXoaData('add')"  style="width:130px;">Add</button>
+                </span></div>
+            </div>
+        </form>
+
+        <form id="updateCustomForm" class="mt-4">
+            <div class="input-group">
+                <div class="input-group-prepend"><span class="input-group-text" style="width:130px;">Cập nhật:</span> </div>
+                <input type="text" class="form-control" id="UpdatedNameInput" required>
+                <div class="input-group-append"><span class="input-group-text">
+                    <button type="submit" class="btn btn-primary"  onclick="ThemSuaXoaData('update')" style="width:130px;">Update</button>
+                </span></div>
+            </div>
+        </form>
+
+        <form id="deleteCustomForm" class="mt-4">
+            <button type="submit" class="btn btn-danger"  onclick="ThemSuaXoaData('delete')">Delete</button>
+        </form>
+
+
+    </div>
+</body>
+</html>
