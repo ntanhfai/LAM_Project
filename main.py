@@ -38,9 +38,14 @@ def process_data():
     cursor = conn.cursor()
 
     if action == 'loadall':
+        mSql = f"SELECT * FROM {table} "
+        if len(data['parent_id'].strip()) > 0:
+            if table == "Project": mSql += f"WHERE id_custom='{data['parent_id']}'"
+            if table == "Models": mSql += f"WHERE id_project='{data['parent_id']}'"
+            if table == "Label": mSql += f"WHERE id_model='{data['parent_id']}'"
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute(f"SELECT * FROM {table}")
+        cursor.execute(mSql)
         custom_list = cursor.fetchall()
         conn.close()
         data_array = [list(row) for row in custom_list]

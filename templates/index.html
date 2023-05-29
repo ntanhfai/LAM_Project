@@ -61,10 +61,23 @@
                         myID: myID,
                         },
                 success: function(response) {
-                    alert(response.message);
-                    if (ThemSuaXoa=="add") $('#NewNameInput').val('');
-                    if (ThemSuaXoa=="update") $('#UpdatedNameInput').val('');
-                    loadAllData();
+                    if (response.hasOwnProperty("message")) {
+                        alert(response.message);
+                        if (ThemSuaXoa=="add") $('#NewNameInput').val('');
+                        if (ThemSuaXoa=="update") $('#UpdatedNameInput').val('');
+                        loadAllData();
+                    }                     
+                    
+                    var All_List = JSON.parse(response);
+                    console.log('#'+tblName+'Select');
+                    var lSelect = $('#'+tblName+'Select');
+                    lSelect.empty();
+
+                    for (var i = 0; i < All_List.length; i++) {
+                        var mdat = All_List[i];
+                        lSelect.append($('<option>').text(mdat[1]).attr('value', mdat[0]));
+                    }
+                    
                 },
                 error: function(xhr, status, error) {
                     alert('Error: ' + error);
@@ -88,34 +101,14 @@
             loadAllData();
         });
  
-        function loadAllData() {
-            $.ajax({
-                url: '/data',
-                type: 'POST',
-                data: { table : tblName,
-                        action : 'loadall'},
-                success: function(response) {
-                    var All_List = JSON.parse(response);
-                    console.log('#'+tblName+'Select');
-                    var lSelect = $('#'+tblName+'Select');
-                    lSelect.empty();
-
-                    for (var i = 0; i < All_List.length; i++) {
-                        var mdat = All_List[i];
-                        lSelect.append($('<option>').text(mdat[1]).attr('value', mdat[0]));
-                    }
-                },
-                error: function(xhr, status, error) {
-                    alert('Error: ' + error);
-                }
-            });
+        function loadAllData() { 
+            ThemSuaXoaData('loadall');  
         }
  
         var tblName='Custom';
         function fnSetActiveTab(tbl){
             tblName=tbl;
-            console.log(tblName);
-            //loadAllData();
+            console.log(tblName); 
         }
     </script>
 </head>
